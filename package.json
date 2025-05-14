@@ -1,6 +1,6 @@
 {
   "name": "@solitary-cheng/co-pump-sdk",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Community Pump Bonding Curve SDK",
   "keywords": [],
   "homepage": "https://github.com/SolitaryCheng/co-pump-sdk#readme",
@@ -32,11 +32,16 @@
     "src"
   ],
   "tsup": {
-    "entry": ["src/index.ts"],
+    "entry": [
+      "src/index.ts"
+    ],
     "splitting": false,
     "sourcemap": true,
     "clean": true,
-    "format": ["esm", "cjs"],
+    "format": [
+      "esm",
+      "cjs"
+    ],
     "dts": true
   },
   "scripts": {
