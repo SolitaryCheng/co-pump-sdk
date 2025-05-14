@@ -39,10 +39,14 @@
     "sourcemap": true,
     "clean": true,
     "format": [
-      "esm",
-      "cjs"
+      "cjs",
+      "esm"
     ],
-    "dts": true
+    "dts": true,
+    "outDir": "dist",
+    "platform": "neutral",
+    "legacyOutput": true,
+    "target": "es2020"
   },
   "scripts": {
     "build": "tsup --clean --dts",
