@@ -35,7 +35,9 @@
     "entry": ["src/index.ts"],
     "splitting": false,
     "sourcemap": true,
-    "clean": true
+    "clean": true,
+    "format": ["esm", "cjs"],
+    "dts": true
   },
   "scripts": {
     "build": "tsup --clean --dts",
