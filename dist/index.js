@@ -1,7 +1,9 @@
 "use strict";
+var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -15,6 +17,14 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
@@ -2672,50 +2682,50 @@ var pump_default = {
 };
 
 // src/bondingCurve.ts
-var import_anchor = require("@coral-xyz/anchor");
+var import_bn = __toESM(require("bn.js"));
 var import_web3 = require("@solana/web3.js");
 function getFee(global, bondingCurve, amount, newCoin) {
   return computeFee(amount, global.feeBasisPoints).add(
-    newCoin || !import_web3.PublicKey.default.equals(bondingCurve.creator) ? computeFee(amount, global.creatorFeeBasisPoints) : new import_anchor.BN(0)
+    newCoin || !import_web3.PublicKey.default.equals(bondingCurve.creator) ? computeFee(amount, global.creatorFeeBasisPoints) : new import_bn.default(0)
   );
 }
 function computeFee(amount, feeBasisPoints) {
-  return ceilDiv(amount.mul(feeBasisPoints), new import_anchor.BN(1e4));
+  return ceilDiv(amount.mul(feeBasisPoints), new import_bn.default(1e4));
 }
 function ceilDiv(a, b) {
   return a.add(b.subn(1)).div(b);
 }
 function getBuyTokenAmountFromSolAmount(global, bondingCurve, amount, newCoin) {
-  if (amount.eq(new import_anchor.BN(0))) {
-    return new import_anchor.BN(0);
+  if (amount.eq(new import_bn.default(0))) {
+    return new import_bn.default(0);
   }
-  if (bondingCurve.virtualTokenReserves.eq(new import_anchor.BN(0))) {
-    return new import_anchor.BN(0);
+  if (bondingCurve.virtualTokenReserves.eq(new import_bn.default(0))) {
+    return new import_bn.default(0);
   }
   const totalFeeBasisPoints = global.feeBasisPoints.add(
-    newCoin || !import_web3.PublicKey.default.equals(bondingCurve.creator) ? global.creatorFeeBasisPoints : new import_anchor.BN(0)
+    newCoin || !import_web3.PublicKey.default.equals(bondingCurve.creator) ? global.creatorFeeBasisPoints : new import_bn.default(0)
   );
   const inputAmount = amount.muln(1e4).div(totalFeeBasisPoints.addn(1e4));
   const tokensReceived = inputAmount.mul(bondingCurve.virtualTokenReserves).div(bondingCurve.virtualSolReserves.add(inputAmount));
-  return import_anchor.BN.min(tokensReceived, bondingCurve.realTokenReserves);
+  return import_bn.default.min(tokensReceived, bondingCurve.realTokenReserves);
 }
 function getBuySolAmountFromTokenAmount(global, bondingCurve, amount, newCoin) {
-  if (amount.eq(new import_anchor.BN(0))) {
-    return new import_anchor.BN(0);
+  if (amount.eq(new import_bn.default(0))) {
+    return new import_bn.default(0);
   }
-  if (bondingCurve.virtualTokenReserves.eq(new import_anchor.BN(0))) {
-    return new import_anchor.BN(0);
+  if (bondingCurve.virtualTokenReserves.eq(new import_bn.default(0))) {
+    return new import_bn.default(0);
   }
-  const minAmount = import_anchor.BN.min(amount, bondingCurve.realTokenReserves);
-  const solCost = minAmount.mul(bondingCurve.virtualSolReserves).div(bondingCurve.virtualTokenReserves.sub(minAmount)).add(new import_anchor.BN(1));
+  const minAmount = import_bn.default.min(amount, bondingCurve.realTokenReserves);
+  const solCost = minAmount.mul(bondingCurve.virtualSolReserves).div(bondingCurve.virtualTokenReserves.sub(minAmount)).add(new import_bn.default(1));
   return solCost.add(getFee(global, bondingCurve, solCost, newCoin));
 }
 function getSellSolAmountFromTokenAmount(global, bondingCurve, amount) {
-  if (amount.eq(new import_anchor.BN(0))) {
-    return new import_anchor.BN(0);
+  if (amount.eq(new import_bn.default(0))) {
+    return new import_bn.default(0);
   }
-  if (bondingCurve.virtualTokenReserves.eq(new import_anchor.BN(0))) {
-    return new import_anchor.BN(0);
+  if (bondingCurve.virtualTokenReserves.eq(new import_bn.default(0))) {
+    return new import_bn.default(0);
   }
   const solCost = amount.mul(bondingCurve.virtualSolReserves).div(bondingCurve.virtualTokenReserves.add(amount));
   return solCost.sub(getFee(global, bondingCurve, solCost, false));
@@ -2765,16 +2775,17 @@ function canonicalPumpPoolPda(pumpProgramId, pumpAmmProgramId, mint) {
 }
 
 // src/sdk.ts
-var import_anchor2 = require("@coral-xyz/anchor");
+var import_bn2 = __toESM(require("bn.js"));
+var import_anchor = require("@coral-xyz/anchor");
 var import_pump_swap_sdk2 = require("@pump-fun/pump-swap-sdk");
 var import_spl_token2 = require("@solana/spl-token");
 var import_web33 = require("@solana/web3.js");
 function getPumpProgram(connection, programId) {
   const pumpIdlAddressOverride = { ...pump_default };
   pumpIdlAddressOverride.address = programId.toString();
-  return new import_anchor2.Program(
+  return new import_anchor.Program(
     pumpIdlAddressOverride,
-    new import_anchor2.AnchorProvider(connection, null, {})
+    new import_anchor.AnchorProvider(connection, null, {})
   );
 }
 var PUMP_PROGRAM_ID = new import_web33.PublicKey(
@@ -2864,7 +2875,7 @@ var PumpSdk = class {
           await this.pumpProgram.methods.buy(
             amount,
             solAmount.add(
-              solAmount.mul(new import_anchor2.BN(Math.floor(slippage * 10))).div(new import_anchor2.BN(1e3))
+              solAmount.mul(new import_bn2.default(Math.floor(slippage * 10))).div(new import_bn2.default(1e3))
             )
           ).accountsPartial({
             feeRecipient: getFeeRecipient(global),
@@ -2890,7 +2901,7 @@ var PumpSdk = class {
           await this.pumpProgram.methods.sell(
             amount,
             solAmount.sub(
-              solAmount.mul(new import_anchor2.BN(Math.floor(slippage * 10))).div(new import_anchor2.BN(1e3))
+              solAmount.mul(new import_bn2.default(Math.floor(slippage * 10))).div(new import_bn2.default(1e3))
             )
           ).accountsPartial({
             feeRecipient: getFeeRecipient(global),
@@ -2943,15 +2954,15 @@ var PumpSdk = class {
     const creatorVault = this.creatorVaultPda(creator);
     const accountInfo = await this.connection.getAccountInfo(creatorVault);
     if (accountInfo === null) {
-      return new import_anchor2.BN(0);
+      return new import_bn2.default(0);
     }
     const rentExemptionLamports = await this.connection.getMinimumBalanceForRentExemption(
       accountInfo.data.length
     );
     if (accountInfo.lamports < rentExemptionLamports) {
-      return new import_anchor2.BN(0);
+      return new import_bn2.default(0);
     }
-    return new import_anchor2.BN(accountInfo.lamports - rentExemptionLamports);
+    return new import_bn2.default(accountInfo.lamports - rentExemptionLamports);
   }
 };
 function getFeeRecipient(global) {

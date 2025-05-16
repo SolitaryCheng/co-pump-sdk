@@ -1,5 +1,6 @@
-import { BN, Program } from '@coral-xyz/anchor';
+import BN from 'bn.js';
 import { PublicKey, PublicKeyInitData, Connection, AccountInfo, TransactionInstruction } from '@solana/web3.js';
+import { Program } from '@coral-xyz/anchor';
 
 /**
  * Program IDL in camelCase format in order to be used in JS/TS.

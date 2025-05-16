@@ -2632,7 +2632,7 @@ var pump_default = {
 };
 
 // src/bondingCurve.ts
-import { BN } from "@coral-xyz/anchor";
+import BN from "bn.js";
 import { PublicKey } from "@solana/web3.js";
 function getFee(global, bondingCurve, amount, newCoin) {
   return computeFee(amount, global.feeBasisPoints).add(
@@ -2725,7 +2725,8 @@ function canonicalPumpPoolPda(pumpProgramId, pumpAmmProgramId, mint) {
 }
 
 // src/sdk.ts
-import { AnchorProvider, BN as BN2, Program } from "@coral-xyz/anchor";
+import BN2 from "bn.js";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PumpAmmSdk } from "@pump-fun/pump-swap-sdk";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
