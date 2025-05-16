@@ -59,10 +59,12 @@
     "@pump-fun/pump-swap-sdk": "0.0.1-beta.25",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
+    "bn.js": "^5.2.2",
     "undici-types": "^6.20.0"
   },
   "devDependencies": {
     "@semantic-release/git": "^10.0.1",
+    "@types/bn.js": "^5.1.6",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
     "cz-conventional-changelog": "^3.3.0",

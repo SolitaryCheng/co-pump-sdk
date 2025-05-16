@@ -1,4 +1,5 @@
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import BN from 'bn.js';
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PumpAmmSdk } from "@pump-fun/pump-swap-sdk";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
