@@ -46,7 +46,8 @@
     "outDir": "dist",
     "platform": "neutral",
     "legacyOutput": true,
-    "target": "es2020"
+    "target": "es2020",
+    "noExternal": ["@coral-xyz/anchor"]
   },
   "scripts": {
     "build": "tsup --clean --dts",
