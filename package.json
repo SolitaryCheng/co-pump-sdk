@@ -1,8 +1,12 @@
 {
   "name": "@solitary-cheng/co-pump-sdk",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "description": "Community-enhanced Pumpfun SDK for Solana",
-  "keywords": ["pumpfun", "sdk", "solana"],
+  "keywords": [
+    "pumpfun",
+    "sdk",
+    "solana"
+  ],
   "homepage": "https://github.com/SolitaryCheng/co-pump-sdk#readme",
   "bugs": {
     "url": "https://github.com/SolitaryCheng/co-pump-sdk/issues"
