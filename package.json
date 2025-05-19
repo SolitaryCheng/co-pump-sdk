@@ -1,6 +1,6 @@
 {
   "name": "@solitary-cheng/co-pump-sdk",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "description": "Community Pump Bonding Curve SDK",
   "keywords": [],
   "homepage": "https://github.com/SolitaryCheng/co-pump-sdk#readme",
@@ -47,7 +47,9 @@
     "platform": "neutral",
     "legacyOutput": true,
     "target": "es2020",
-    "noExternal": ["@coral-xyz/anchor"]
+    "noExternal": [
+      "@coral-xyz/anchor"
+    ]
   },
   "scripts": {
     "build": "tsup --clean --dts",
