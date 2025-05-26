@@ -1,8 +1,9 @@
-import BN from 'bn.js';
+import BN from "bn.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PumpAmmSdk } from "@pump-fun/pump-swap-sdk";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
+  createAssociatedTokenAccountInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
@@ -24,6 +25,7 @@ import {
   pumpPoolAuthorityPda,
 } from "./pda";
 import { BondingCurve, Global } from "./state";
+import { memoize } from "./decorator";
 
 export function getPumpProgram(
   connection: Connection,
@@ -49,9 +51,9 @@ export const PUMP_AMM_PROGRAM_ID = new PublicKey(
 export const BONDING_CURVE_NEW_SIZE = 150;
 
 export class PumpSdk {
-  private readonly connection: Connection;
-  private readonly pumpProgram: Program<Pump>;
-  private readonly pumpAmmSdk: PumpAmmSdk;
+  protected readonly connection: Connection;
+  protected readonly pumpProgram: Program<Pump>;
+  protected readonly pumpAmmSdk: PumpAmmSdk;
 
   constructor(
     connection: Connection,
@@ -132,70 +134,85 @@ export class PumpSdk {
       .instruction();
   }
 
+  @memoize(0)
+  async getGlobal() {
+    return await this.fetchGlobal();
+  }
+
+  @memoize(0, (mint) => mint.toBase58())
+  async cachedBondingCurve(mint: PublicKey) {
+    return await this.fetchBondingCurve(mint);
+  }
+
+  async getBondingCurveAccountInfo(
+    mint: PublicKeyInitData,
+    isThrowErrorWhenNull = true,
+  ) {
+    try {
+      const bondingCurvePda = this.bondingCurvePda(mint);
+      return await this.connection.getAccountInfo(bondingCurvePda);
+    } catch (error) {
+      if (isThrowErrorWhenNull) throw error;
+      return null;
+    }
+  }
+
   async buyInstructions(
-    global: Global,
-    bondingCurveAccountInfo: AccountInfo<Buffer> | null,
-    bondingCurve: BondingCurve,
     mint: PublicKey,
     user: PublicKey,
     amount: BN,
     solAmount: BN,
     slippage: number,
-    newCoinCreator: PublicKey,
-  ): Promise<TransactionInstruction[]> {
-    return this.withFixBondingCurve(
-      mint,
-      bondingCurveAccountInfo,
-      user,
-      async () => {
-        const instructions: TransactionInstruction[] = [];
-
-        const associatedUser = getAssociatedTokenAddressSync(mint, user, true);
-
-        const userTokenAccount = await getAccount(
-          this.connection,
+    creator?: PublicKey,
+    isAutoCreateAccount = true, //
+  ) {
+    const instructions = [];
+    const global = await this.getGlobal();
+    const associatedUser = getAssociatedTokenAddressSync(mint, user, true);
+    const $creator = creator ?? (await this.cachedBondingCurve(mint)).creator;
+    if (isAutoCreateAccount) {
+      instructions.push(
+        createAssociatedTokenAccountIdempotentInstruction(
+          user,
           associatedUser,
-        ).catch((e) => null);
+          user,
+          mint,
+        ),
+      );
+    } else {
+      const userTokenAccount = await getAccount(
+        this.connection,
+        associatedUser,
+      ).catch((e) => null);
 
-        // if user account doesn't exist add an instruction to create it
-        if (!userTokenAccount) {
-          instructions.push(
-            createAssociatedTokenAccountIdempotentInstruction(
-              user,
-              associatedUser,
-              user,
-              mint,
-            ),
-          );
-        }
-
+      // if user account doesn't exist add an instruction to create it
+      if (!userTokenAccount) {
         instructions.push(
-          await this.pumpProgram.methods
-            .buy(
-              amount,
-              solAmount.add(
-                solAmount
-                  .mul(new BN(Math.floor(slippage * 10)))
-                  .div(new BN(1000)),
-              ),
-            )
-            .accountsPartial({
-              feeRecipient: getFeeRecipient(global),
-              mint,
-              associatedUser,
-              user,
-              creatorVault: this.creatorVaultPda(
-                bondingCurveAccountInfo === null
-                  ? newCoinCreator
-                  : bondingCurve.creator,
-              ),
-            })
-            .instruction(),
+          createAssociatedTokenAccountInstruction(
+            user,
+            associatedUser,
+            user,
+            mint,
+          ),
         );
+      }
+    }
 
-        return instructions;
-      },
-    );
+    await this.pumpProgram.methods
+      .buy(
+        amount,
+        solAmount.add(
+          solAmount.mul(new BN(Math.floor(slippage * 10))).div(new BN(1e3)),
+        ),
+      )
+      .accountsPartial({
+        feeRecipient: getFeeRecipient(global),
+        mint,
+        associatedUser,
+        user,
+        creatorVault: this.creatorVaultPda($creator),
+      })
+      .instruction();
   }
 
   async sellInstructions(
