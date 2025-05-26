@@ -11,8 +11,9 @@
     "declaration": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "experimentalDecorators": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
-} 
+}
