@@ -1,6 +1,7 @@
 import BN from 'bn.js';
 import { PublicKey, PublicKeyInitData, Connection, AccountInfo, TransactionInstruction } from '@solana/web3.js';
 import { Program } from '@coral-xyz/anchor';
+import { PumpAmmSdk } from '@pump-fun/pump-swap-sdk';
 
 /**
  * Program IDL in camelCase format in order to be used in JS/TS.
@@ -5652,9 +5653,10 @@ declare const PUMP_PROGRAM_ID: PublicKey;
 declare const PUMP_AMM_PROGRAM_ID: PublicKey;
 declare const BONDING_CURVE_NEW_SIZE = 150;
 declare class PumpSdk {
-    private readonly connection;
-    private readonly pumpProgram;
-    private readonly pumpAmmSdk;
+    #private;
+    protected readonly connection: Connection;
+    protected readonly pumpProgram: Program<Pump>;
+    protected readonly pumpAmmSdk: PumpAmmSdk;
     constructor(connection: Connection, pumpProgramId?: PublicKey, pumpAmmProgramId?: PublicKey);
     programId(): PublicKey;
     globalPda(): PublicKey;
@@ -5667,7 +5669,10 @@ declare class PumpSdk {
     fetchGlobal(): Promise<Global>;
     fetchBondingCurve(mint: PublicKeyInitData): Promise<BondingCurve>;
     createInstruction(mint: PublicKey, name: string, symbol: string, uri: string, creator: PublicKey, user: PublicKey): Promise<TransactionInstruction>;
-    buyInstructions(global: Global, bondingCurveAccountInfo: AccountInfo<Buffer> | null, bondingCurve: BondingCurve, mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number, newCoinCreator: PublicKey): Promise<TransactionInstruction[]>;
+    getGlobal(): Promise<Global>;
+    cachedBondingCurve(mint: PublicKey): Promise<BondingCurve>;
+    getBondingCurveAccountInfo(mint: PublicKeyInitData, isThrowErrorWhenNull?: boolean): Promise<AccountInfo<Buffer<ArrayBufferLike>> | null>;
+    buyInstructions2(mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number, creator?: PublicKey, isAutoCreateAccount?: boolean): Promise<void>;
     sellInstructions(global: Global, bondingCurveAccountInfo: AccountInfo<Buffer> | null, mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number): Promise<TransactionInstruction[]>;
     fixExistingBondingCurve(mint: PublicKey, bondingCurveAccountInfo: AccountInfo<Buffer> | null, user: PublicKey): Promise<TransactionInstruction[]>;
     private withFixBondingCurve;

@@ -4,6 +4,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {
@@ -29,6 +32,18 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 
 // node_modules/.pnpm/base64-js@1.5.1/node_modules/base64-js/index.js
 var require_base64_js = __commonJS({
@@ -16021,12 +16036,34 @@ new PublicKey3("11111111111111111111111111111111");
 import { PumpAmmSdk } from "@pump-fun/pump-swap-sdk";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
+  createAssociatedTokenAccountInstruction,
   getAccount,
   getAssociatedTokenAddressSync
 } from "@solana/spl-token";
 import {
   PublicKey as PublicKey4
 } from "@solana/web3.js";
+
+// src/decorator.ts
+function memoize(duration, computeKey = (...args) => args[0]) {
+  return function(_, _key, descriptor) {
+    const originalMethod = descriptor.value;
+    let cachedData = /* @__PURE__ */ new Map();
+    let cachedTime = Date.now();
+    const isExpired = () => duration > 0 && cachedTime < Date.now();
+    descriptor.value = async function(...args) {
+      const key = computeKey(...args);
+      if (!cachedData.get(key) || isExpired()) {
+        cachedTime = Date.now() + duration;
+        cachedData.set(key, await originalMethod.apply(this, args));
+      }
+      return cachedData.get(key);
+    };
+    return descriptor;
+  };
+}
+
+// src/sdk.ts
 function getPumpProgram(connection, programId) {
   const pumpIdlAddressOverride = { ...pump_default };
   pumpIdlAddressOverride.address = programId.toString();
@@ -16042,8 +16079,10 @@ var PUMP_AMM_PROGRAM_ID = new PublicKey4(
   "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
 );
 var BONDING_CURVE_NEW_SIZE = 150;
+var _global;
 var PumpSdk = class {
   constructor(connection, pumpProgramId = PUMP_PROGRAM_ID, pumpAmmProgramId = PUMP_AMM_PROGRAM_ID) {
+    __privateAdd(this, _global);
     this.connection = connection;
     this.pumpProgram = getPumpProgram(connection, pumpProgramId);
     this.pumpAmmSdk = new PumpAmmSdk(connection, pumpAmmProgramId.toBase58());
@@ -16096,47 +16135,66 @@ var PumpSdk = class {
       user
     }).instruction();
   }
-  async buyInstructions(global2, bondingCurveAccountInfo, bondingCurve, mint, user, amount, solAmount, slippage, newCoinCreator) {
-    return this.withFixBondingCurve(
-      mint,
-      bondingCurveAccountInfo,
-      user,
-      async () => {
-        const instructions = [];
-        const associatedUser = getAssociatedTokenAddressSync(mint, user, true);
-        const userTokenAccount = await getAccount(
-          this.connection,
-          associatedUser
-        ).catch((e) => null);
-        if (!userTokenAccount) {
-          instructions.push(
-            createAssociatedTokenAccountIdempotentInstruction(
-              user,
-              associatedUser,
-              user,
-              mint
-            )
-          );
-        }
+  async getGlobal() {
+    if (!__privateGet(this, _global)) {
+      __privateSet(this, _global, await this.fetchGlobal());
+    }
+    return __privateGet(this, _global);
+  }
+  async cachedBondingCurve(mint) {
+    return await this.fetchBondingCurve(mint);
+  }
+  async getBondingCurveAccountInfo(mint, isThrowErrorWhenNull = true) {
+    try {
+      const bondingCurvePda2 = this.bondingCurvePda(mint);
+      return await this.connection.getAccountInfo(bondingCurvePda2);
+    } catch (error) {
+      if (isThrowErrorWhenNull) throw error;
+      return null;
+    }
+  }
+  async buyInstructions2(mint, user, amount, solAmount, slippage, creator, isAutoCreateAccount = true) {
+    const instructions = [];
+    const global2 = await this.getGlobal();
+    const associatedUser = getAssociatedTokenAddressSync(mint, user, true);
+    const $creator = creator ?? (await this.cachedBondingCurve(mint)).creator;
+    if (isAutoCreateAccount) {
+      instructions.push(
+        createAssociatedTokenAccountIdempotentInstruction(
+          user,
+          associatedUser,
+          user,
+          mint
+        )
+      );
+    } else {
+      const userTokenAccount = await getAccount(
+        this.connection,
+        associatedUser
+      ).catch((e) => null);
+      if (!userTokenAccount) {
         instructions.push(
-          await this.pumpProgram.methods.buy(
-            amount,
-            solAmount.add(
-              solAmount.mul(new BN3(Math.floor(slippage * 10))).div(new BN3(1e3))
-            )
-          ).accountsPartial({
-            feeRecipient: getFeeRecipient(global2),
-            mint,
+          createAssociatedTokenAccountInstruction(
+            user,
             associatedUser,
             user,
-            creatorVault: this.creatorVaultPda(
-              bondingCurveAccountInfo === null ? newCoinCreator : bondingCurve.creator
-            )
-          }).instruction()
+            mint
+          )
         );
-        return instructions;
       }
-    );
+    }
+    await this.pumpProgram.methods.buy(
+      amount,
+      solAmount.add(
+        solAmount.mul(new BN3(Math.floor(slippage * 10))).div(new BN3(1e3))
+      )
+    ).accountsPartial({
+      feeRecipient: getFeeRecipient(global2),
+      mint,
+      associatedUser,
+      user,
+      creatorVault: this.creatorVaultPda($creator)
+    }).instruction();
   }
   async sellInstructions(global2, bondingCurveAccountInfo, mint, user, amount, solAmount, slippage) {
     return this.withFixBondingCurve(
@@ -16212,6 +16270,10 @@ var PumpSdk = class {
     return new BN3(accountInfo.lamports - rentExemptionLamports);
   }
 };
+_global = new WeakMap();
+__decorateClass([
+  memoize(0, (mint) => mint.toBase58())
+], PumpSdk.prototype, "cachedBondingCurve", 1);
 function getFeeRecipient(global2) {
   const feeRecipients = [global2.feeRecipient, ...global2.feeRecipients];
   return feeRecipients[Math.floor(Math.random() * feeRecipients.length)];
