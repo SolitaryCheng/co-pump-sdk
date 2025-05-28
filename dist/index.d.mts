@@ -5671,7 +5671,7 @@ declare class PumpSdk {
     getGlobal(): Promise<Global>;
     cachedBondingCurve(mint: PublicKey): Promise<BondingCurve>;
     getBondingCurveAccountInfo(mint: PublicKeyInitData, isThrowErrorWhenNull?: boolean): Promise<AccountInfo<Buffer<ArrayBufferLike>> | null>;
-    buyInstructions(mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number, creator?: PublicKey, isAutoCreateAccount?: boolean): Promise<void>;
+    buyInstructions(mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number, creator?: PublicKey, isAutoCreateAccount?: boolean): Promise<TransactionInstruction[]>;
     sellInstructions(global: Global, bondingCurveAccountInfo: AccountInfo<Buffer> | null, mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number): Promise<TransactionInstruction[]>;
     fixExistingBondingCurve(mint: PublicKey, bondingCurveAccountInfo: AccountInfo<Buffer> | null, user: PublicKey): Promise<TransactionInstruction[]>;
     private withFixBondingCurve;

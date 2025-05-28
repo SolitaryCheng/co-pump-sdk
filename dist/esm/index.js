@@ -16171,18 +16171,21 @@ var PumpSdk = class {
         );
       }
     }
-    await this.pumpProgram.methods.buy(
-      amount,
-      solAmount.add(
-        solAmount.mul(new BN3(Math.floor(slippage * 10))).div(new BN3(1e3))
-      )
-    ).accountsPartial({
-      feeRecipient: getFeeRecipient(global2),
-      mint,
-      associatedUser,
-      user,
-      creatorVault: this.creatorVaultPda($creator)
-    }).instruction();
+    instructions.push(
+      await this.pumpProgram.methods.buy(
+        amount,
+        solAmount.add(
+          solAmount.mul(new BN3(Math.floor(slippage * 10))).div(new BN3(1e3))
+        )
+      ).accountsPartial({
+        feeRecipient: getFeeRecipient(global2),
+        mint,
+        associatedUser,
+        user,
+        creatorVault: this.creatorVaultPda($creator)
+      }).instruction()
+    );
+    return instructions;
   }
   async sellInstructions(global2, bondingCurveAccountInfo, mint, user, amount, solAmount, slippage) {
     return this.withFixBondingCurve(
