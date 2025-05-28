@@ -5,9 +5,6 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __typeError = (msg) => {
-  throw TypeError(msg);
-};
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
@@ -40,10 +37,6 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
-var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
-var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 
 // node_modules/.pnpm/base64-js@1.5.1/node_modules/base64-js/index.js
 var require_base64_js = __commonJS({
@@ -16093,10 +16086,8 @@ var PUMP_AMM_PROGRAM_ID = new import_web34.PublicKey(
   "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
 );
 var BONDING_CURVE_NEW_SIZE = 150;
-var _global;
 var PumpSdk = class {
   constructor(connection, pumpProgramId = PUMP_PROGRAM_ID, pumpAmmProgramId = PUMP_AMM_PROGRAM_ID) {
-    __privateAdd(this, _global);
     this.connection = connection;
     this.pumpProgram = getPumpProgram(connection, pumpProgramId);
     this.pumpAmmSdk = new import_pump_swap_sdk2.PumpAmmSdk(connection, pumpAmmProgramId.toBase58());
@@ -16150,10 +16141,7 @@ var PumpSdk = class {
     }).instruction();
   }
   async getGlobal() {
-    if (!__privateGet(this, _global)) {
-      __privateSet(this, _global, await this.fetchGlobal());
-    }
-    return __privateGet(this, _global);
+    return await this.fetchGlobal();
   }
   async cachedBondingCurve(mint) {
     return await this.fetchBondingCurve(mint);
@@ -16167,7 +16155,7 @@ var PumpSdk = class {
       return null;
     }
   }
-  async buyInstructions2(mint, user, amount, solAmount, slippage, creator, isAutoCreateAccount = true) {
+  async buyInstructions(mint, user, amount, solAmount, slippage, creator, isAutoCreateAccount = true) {
     const instructions = [];
     const global2 = await this.getGlobal();
     const associatedUser = (0, import_spl_token2.getAssociatedTokenAddressSync)(mint, user, true);
@@ -16284,7 +16272,9 @@ var PumpSdk = class {
     return new import_bn4.default(accountInfo.lamports - rentExemptionLamports);
   }
 };
-_global = new WeakMap();
+__decorateClass([
+  memoize(0)
+], PumpSdk.prototype, "getGlobal", 1);
 __decorateClass([
   memoize(0, (mint) => mint.toBase58())
 ], PumpSdk.prototype, "cachedBondingCurve", 1);

@@ -5653,7 +5653,6 @@ declare const PUMP_PROGRAM_ID: PublicKey;
 declare const PUMP_AMM_PROGRAM_ID: PublicKey;
 declare const BONDING_CURVE_NEW_SIZE = 150;
 declare class PumpSdk {
-    #private;
     protected readonly connection: Connection;
     protected readonly pumpProgram: Program<Pump>;
     protected readonly pumpAmmSdk: PumpAmmSdk;
@@ -5672,7 +5671,7 @@ declare class PumpSdk {
     getGlobal(): Promise<Global>;
     cachedBondingCurve(mint: PublicKey): Promise<BondingCurve>;
     getBondingCurveAccountInfo(mint: PublicKeyInitData, isThrowErrorWhenNull?: boolean): Promise<AccountInfo<Buffer<ArrayBufferLike>> | null>;
-    buyInstructions2(mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number, creator?: PublicKey, isAutoCreateAccount?: boolean): Promise<void>;
+    buyInstructions(mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number, creator?: PublicKey, isAutoCreateAccount?: boolean): Promise<void>;
     sellInstructions(global: Global, bondingCurveAccountInfo: AccountInfo<Buffer> | null, mint: PublicKey, user: PublicKey, amount: BN, solAmount: BN, slippage: number): Promise<TransactionInstruction[]>;
     fixExistingBondingCurve(mint: PublicKey, bondingCurveAccountInfo: AccountInfo<Buffer> | null, user: PublicKey): Promise<TransactionInstruction[]>;
     private withFixBondingCurve;
