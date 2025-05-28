@@ -164,9 +164,9 @@ export class PumpSdk {
     solAmount: BN,
     slippage: number,
     creator?: PublicKey,
-    isAutoCreateAccount = true, //
-  ) {
-    const instructions = [];
+    isAutoCreateAccount = true,
+  ): Promise<TransactionInstruction[]> {
+    const instructions:TransactionInstruction[] = [];
     const global = await this.getGlobal();
     const associatedUser = getAssociatedTokenAddressSync(mint, user, true);
     const $creator = creator ?? (await this.cachedBondingCurve(mint)).creator;
@@ -198,21 +198,25 @@ export class PumpSdk {
       }
     }
 
-    await this.pumpProgram.methods
-      .buy(
-        amount,
-        solAmount.add(
-          solAmount.mul(new BN(Math.floor(slippage * 10))).div(new BN(1e3)),
-        ),
-      )
-      .accountsPartial({
-        feeRecipient: getFeeRecipient(global),
-        mint,
-        associatedUser,
-        user,
-        creatorVault: this.creatorVaultPda($creator),
-      })
-      .instruction();
+    instructions.push(
+      await this.pumpProgram.methods
+        .buy(
+          amount,
+          solAmount.add(
+            solAmount.mul(new BN(Math.floor(slippage * 10))).div(new BN(1e3)),
+          ),
+        )
+        .accountsPartial({
+          feeRecipient: getFeeRecipient(global),
+          mint,
+          associatedUser,
+          user,
+          creatorVault: this.creatorVaultPda($creator),
+        })
+        .instruction(),
+    );
+
+    return instructions;
   }
 
   async sellInstructions(
