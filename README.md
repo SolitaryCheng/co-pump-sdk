@@ -39,13 +39,13 @@ import {
 const pumpSdk = new PumpSdk(RPC_CONNECTION);
 
 // 获取全局参数
-const global = await pumpSdk.fetchGlobal();
+const global = await pumpSdk.getGlobal();
 
 // 设置代币铸造地址
 const mint = new web3.PublicKey(MINT_ADDRESS);
 
 // 获取绑定曲线信息
-const bondingCurve = await pumpSdk.fetchBondingCurve(mint);
+const bondingCurve = await pumpSdk.cachedBondingCurve(mint);
 
 // 设置订单金额（以 SOL 计算）
 const orderAmount = new BN(1 * web3.LAMPORTS_PER_SOL);
@@ -60,17 +60,57 @@ const orderAmountToken = getBuyTokenAmountFromSolAmount(
 
 // 创建购买指令
 const ixs = await pumpSdk.buyInstructions(
-  global, 
-  null, 
-  bondingCurve, 
   mint, 
   keypair.publicKey, 
   orderAmountToken, 
   orderAmount, 
   maxSlippage,
-  bondingCurve.creator
 );
 ```
+
+出售代币时，可使用以下示例代码：
+
+```typescript
+import * as web3 from '@solana/web3.js';
+import { 
+  PumpSdk, 
+  getBuyTokenAmountFromSolAmount,
+  getBuySolAmountFromTokenAmount,
+  getSellSolAmountFromTokenAmount
+} from "@solitary-cheng/co-pump-sdk";
+
+// 初始化 SDK
+const pumpSdk = new PumpSdk(RPC_CONNECTION);
+
+// 获取全局参数
+const global = await pumpSdk.getGlobal();
+
+// 设置代币铸造地址
+const mint = new web3.PublicKey(MINT_ADDRESS);
+
+// 获取绑定曲线信息
+const bondingCurve = await pumpSdk.cachedBondingCurve(mint);
+
+// 设置代币数量
+const orderAmountToken = new BN(100_000 * 1e6);
+
+// 计算可获得的代币数量
+const orderAmount = getSellSolAmountFromTokenAmount(
+  global,
+  bondingCurve, 
+  orderAmountToken
+);
+
+// 创建购买指令
+const ixs = await pumpSdk.sellInstructions(
+  global, null, mint, 
+  keypair.publicKey, 
+  orderAmountToken, 
+  orderAmount, 
+  maxSlippage,
+);
+```
+
 
 ### Pump Swap
 
